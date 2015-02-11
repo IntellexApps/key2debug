@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# title				: key2debug
-# description		: Convert any Android keystore to a debug keystore.
-# author			: Intellex
-# date 				: 20150902
-# version			: 0.0.1
-# usage				: key2debug <path_to_the_keystore>
+# title             : key2debug
+# description       : Convert any Android keystore to a debug keystore.
+# author            : Intellex
+# date              : 20150902
+# version           : 0.0.1
+# usage             : key2debug <path_to_the_keystore>
 #===============================================================================
 
 
@@ -72,11 +72,11 @@ fi
 	if [ ! $? -eq 0 ]; then ERROR "Unable to unlock the keystore with supplied passphrase"; fi
 
 	# Change the alias
-	printf "keytool -changealias -keystore mykeystore.keystore -alias ${ALIAS} -destalias androiddebugkey" >/dev/null 2>/dev/null
+	printf "android\n${PASSWORD}" | keytool -changealias -keystore ${DEBUG} -alias ${ALIAS} -destalias androiddebugkey >/dev/null 2>/dev/null
 	if [ ! $? -eq 0 ]; then ERROR "Unable to unlock the keystore with supplied passphrase or bad alias"; fi
 
 	# Set new password for alias
-	printf "android\n${PASSWORD}\nandroid\nandroid" | keytool -keypasswd -keystore "${DEBUG}" -alias "${ALIAS}" >/dev/null 2>/dev/null
+	printf "android\n${PASSWORD}\nandroid\nandroid" | keytool -keypasswd -keystore "${DEBUG}" -alias androiddebugkey >/dev/null 2>/dev/null
 	if [ ! $? -eq 0 ]; then ERROR "Bad alias or alias password"; fi
 
 # Print message
