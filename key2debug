@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# title				: key2debug
+# description		: Convert any Android keystore to a debug keystore.
+# author			: Intellex
+# date 				: 20150902
+# version			: 0.0.1
+# usage				: key2debug <path_to_the_keystore>
+#===============================================================================
+
+
+# Definitions {
+
+	# Colors
+	RED=$(tput setaf 1)
+	CLEAR=$(tput sgr0)
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ }
+
+
+# Macros {
+
+	# Error handling
+	ERROR() {
+		echo "${RED}ERROR: $1${CLEAR}" >&2
+		exit 2
+	}
+
+#~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ }
+
+
+
+# Get the keystore
+KEYSTORE=$1
+
+# Validate keystore
+if [ "${KEYSTORE}" = "" ]; then
+	echo; echo "Usage: keystore2debug <path_to_the_keystore>"; echo "Script will generate additional keystore, it will NOT overwrite exiting one."; echo;
+	exit 1;
+
+elif [ ! -f "${KEYSTORE}" ]; then
+	ERROR "Unable to find supplied keystore"
+fi
+
+# Create a debug file
+DEBUG="${KEYSTORE}.debug"
+cp "${KEYSTORE}" "${DEBUG}"
+if [ ! $? -eq 0 ]; then
+	ERROR "Unable to write to ${DEBUG}"
+fi
+
+# Read {
+
+	# Passphrase
+	printf "Original passphrase: ";
+	read PASSPHRASE
+
+	# Alias
+	printf "Original alias: "
+	read ALIAS
+
+	# Alias password
+	printf "Original alias password: "
+	read PASSWORD
+
+# }
+
+# Change debug data
+
+	# Set new passphrase to 'android'
+	printf "${PASSPHRASE}\nandroid\nandroid" | keytool -storepasswd -keystore "${DEBUG}" >/dev/null 2>/dev/null
+	if [ ! $? -eq 0 ]; then ERROR "Unable to unlock the keystore with supplied passphrase"; fi
+
+	# Change the alias
+	printf "keytool -changealias -keystore mykeystore.keystore -alias ${ALIAS} -destalias androiddebugkey" >/dev/null 2>/dev/null
+	if [ ! $? -eq 0 ]; then ERROR "Unable to unlock the keystore with supplied passphrase or bad alias"; fi
+
+	# Set new password for alias
+	printf "android\n${PASSWORD}\nandroid\nandroid" | keytool -keypasswd -keystore "${DEBUG}" -alias "${ALIAS}" >/dev/null 2>/dev/null
+	if [ ! $? -eq 0 ]; then ERROR "Bad alias or alias password"; fi
+
+# Print message
+
+echo; echo "Success! Debug keystore saved as ${DEBUG}"; echo;
